@@ -1,5 +1,6 @@
 import { RecordService } from "@/api/recordApi";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/app/components/card";
+import PageShell from "@/app/components/page-shell";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { Record } from "@/types/record";
 import { User } from "@/types/user";
@@ -15,51 +16,50 @@ export default async function RecordPage(props: Readonly<RecordPageProps>) {
     const owner: User = await recordService.getRecordRelation<User>(record, "ownedBy");
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-            <main
-                className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-                <div className="flex flex-col items-center w-full gap-6 text-center sm:items-start sm:text-left">
-                    <div className="space-y-4 w-full">
-                        <h1 className="text-2xl font-semibold">Record</h1>
-
-                        <div className="space-y-3 w-full">
-                            <Card className="w-full">
-                                <CardHeader>
-                                    <CardTitle>{record.name}</CardTitle>
-                                    {record.description && (
-                                        <CardDescription>{record.description}</CardDescription>
-                                    )}
-
-                                </CardHeader>
-                                <CardContent>
-                                    {record.created && (
-                                        <p className="text-sm text-gray-500">
-                                            Created: {new Date(record.created).toLocaleString()}
-                                        </p>
-                                    )}
-                                    {record.modified && (
-                                        <p className="text-sm text-gray-500">
-                                            Last Modified: {new Date(record.modified).toLocaleString()}
-                                        </p>
-                                    )}
-                                    {owner && (
-                                        <>
-                                            <p className="text-sm text-gray-500 mt-2">
-                                                Owner: <Link href={`/users/${owner.username}`} className="text-blue-600 hover:underline">{owner.username}</Link>
-                                            </p>
-                                            {owner.email && (
-                                                <p className="text-sm text-gray-500">
-                                                    Email: {owner.email}
-                                                </p>
-                                            )}
-                                        </>
-                                    )}
-                                </CardContent>
-                            </Card>
-                        </div>
-                    </div>
-                </div>
-            </main>
-        </div>
+        <PageShell
+            eyebrow="Record detail"
+            title="Record"
+            description="View the published information associated with this record."
+        >
+            <Card className="w-full border-border/90">
+                <CardHeader>
+                    <div className="list-kicker">Record</div>
+                    <CardTitle className="text-2xl">{record.name}</CardTitle>
+                    {record.description && (
+                        <CardDescription>{record.description}</CardDescription>
+                    )}
+                </CardHeader>
+                <CardContent className="space-y-3">
+                    {record.created && (
+                        <p className="text-sm text-muted-foreground">
+                            Created: {new Date(record.created).toLocaleString()}
+                        </p>
+                    )}
+                    {record.modified && (
+                        <p className="text-sm text-muted-foreground">
+                            Last Modified: {new Date(record.modified).toLocaleString()}
+                        </p>
+                    )}
+                    {owner && (
+                        <>
+                            <p className="text-sm text-muted-foreground">
+                                Owner:{" "}
+                                <Link
+                                    href={`/users/${owner.username}`}
+                                    className="font-semibold text-primary hover:underline"
+                                >
+                                    {owner.username}
+                                </Link>
+                            </p>
+                            {owner.email && (
+                                <p className="text-sm text-muted-foreground">
+                                    Email: {owner.email}
+                                </p>
+                            )}
+                        </>
+                    )}
+                </CardContent>
+            </Card>
+        </PageShell>
     );
 }

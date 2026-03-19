@@ -2,7 +2,6 @@
 
 import { useAuth } from "@/app/components/authentication";
 import Loginbar from "@/app/components/loginbar";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -19,20 +18,21 @@ export default function Navbar() {
     ];
 
     return (
-        <nav className="border-b bg-white shadow-sm dark:bg-black">
-            <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-4 py-4 sm:px-6">
-                <div className="flex gap-2 font-bold w-auto">
-                    <Image
-                        className="dark:invert"
-                        src="/next.svg"
-                        alt="Next.js logo"
-                        width={80}
-                        height={16}
-                        priority
-                    /> Template
-                </div>
+        <nav className="sticky top-0 z-50 border-b border-border bg-card/95 backdrop-blur-sm">
+            <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-4 px-4 py-4 sm:px-6 lg:px-8">
+                <Link href="/" className="mr-auto flex min-w-0 items-center gap-3">
+                    <span className="block h-8 w-1 bg-primary" />
+                    <div className="min-w-0">
+                        <div className="text-[0.68rem] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                            Catalunya Robotics
+                        </div>
+                        <div className="truncate text-lg font-semibold tracking-[-0.03em] text-foreground">
+                            First LEGO League
+                        </div>
+                    </div>
+                </Link>
 
-                <div className="flex flex-1 flex-wrap items-center gap-2">
+                <div className="order-3 flex w-full flex-wrap items-center gap-1 lg:order-2 lg:w-auto lg:flex-1 lg:justify-center">
                     {navLinks
                         .filter(({ roles }) =>
                             !roles || user?.authorities?.some(
@@ -47,8 +47,8 @@ export default function Navbar() {
                                     href={href}
                                     className={
                                         active
-                                            ? "rounded-md border border-blue-600 bg-blue-50 px-3 py-1.5 text-sm font-medium text-blue-700 transition dark:bg-blue-950 dark:text-blue-300"
-                                            : "rounded-md border border-zinc-300 px-3 py-1.5 text-sm font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-900"
+                                            ? "border-b-2 border-accent px-4 py-2 text-sm font-medium text-accent"
+                                            : "border-b-2 border-transparent px-4 py-2 text-sm font-medium text-muted-foreground hover:text-foreground"
                                     }
                                 >
                                     {label}
@@ -57,10 +57,9 @@ export default function Navbar() {
                         })}
                 </div>
 
-                <div className="ml-auto">
+                <div className="order-2 lg:order-3">
                     <Loginbar />
                 </div>
-
             </div>
         </nav>
     );

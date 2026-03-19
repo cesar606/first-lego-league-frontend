@@ -1,23 +1,28 @@
+import { Button } from "@/app/components/button";
+import PageShell from "@/app/components/page-shell";
+
 export default function ScientificProjectsPage() {
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-            <main className="w-full max-w-3xl p-8 sm:p-12">
-                <section className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-                    <h1 className="text-2xl font-semibold text-zinc-900 dark:text-zinc-100">
-                        Scientific Projects
-                    </h1>
-                    <p className="mt-3 text-zinc-600 dark:text-zinc-300">
-                        Module under construction.
-                    </p>
-                    <button
-                        type="button"
-                        disabled
-                        className="mt-6 inline-flex cursor-not-allowed rounded-lg bg-zinc-400 px-4 py-2 text-sm font-medium text-white dark:bg-zinc-600"
-                    >
-                        Scientific project list coming soon
-                    </button>
-                </section>
-            </main>
-        </div>
+        <PageShell
+            eyebrow="Innovation project"
+            title="Scientific Projects"
+            description="Explore innovation projects linked to each FIRST LEGO League edition."
+        >
+            <div className="space-y-5">
+                <div className="page-eyebrow">Upcoming section</div>
+                <h2 className="section-title">Project area in preparation.</h2>
+                <p className="section-copy max-w-3xl">
+                    This area is reserved for project submissions, ideas and season-related documentation.
+                </p>
+                <Button
+                    type="button"
+                    disabled
+                    variant="secondary"
+                    className="fll-disabled mt-2"
+                >
+                    Scientific project list unavailable
+                </Button>
+            </div>
+        </PageShell>
     );
 }

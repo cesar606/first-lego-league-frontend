@@ -2,8 +2,10 @@
 
 import { UsersService } from "@/api/userApi";
 import { useAuth } from "@/app/components/authentication";
-import { Avatar } from "@/app/components/avatar";
+import { Avatar, AvatarFallback } from "@/app/components/avatar";
+import { buttonVariants } from "@/app/components/button";
 import { AUTH_COOKIE_NAME, clientAuthProvider } from "@/lib/authProvider";
+import { cn } from "@/lib/utils";
 import { faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { deleteCookie } from "cookies-next";
@@ -13,6 +15,7 @@ import { useEffect } from "react";
 
 export default function Loginbar() {
     const router = useRouter();
+    const { user, setUser } = useAuth();
 
     function logout() {
         deleteCookie(AUTH_COOKIE_NAME);
@@ -20,16 +23,14 @@ export default function Loginbar() {
         router.push("/");
     }
 
-    const { user, setUser } = useAuth();
-
     useEffect(() => {
         let mounted = true;
 
         async function load() {
             try {
                 const service = new UsersService(clientAuthProvider);
-                const user = await service.getCurrentUser();
-                setUser(user ?? null);
+                const currentUser = await service.getCurrentUser();
+                if (mounted) setUser(currentUser ?? null);
             } catch {
                 if (mounted) setUser(null);
             }
@@ -39,21 +40,32 @@ export default function Loginbar() {
         return () => {
             mounted = false;
         };
-    }, []);
+    }, [setUser]);
 
     if (user) {
         return (
-            <div className="flex items-center gap-5">
-                <div className="flex items-center gap-2">
-                    <Avatar className="rounded-lg flex items-center justify-center bg-gray-200">
-                        <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+            <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-3 border border-border bg-card px-3 py-2">
+                    <Avatar>
+                        <AvatarFallback>
+                            <FontAwesomeIcon icon={faUser} className="h-4 w-4" />
+                        </AvatarFallback>
                     </Avatar>
-                    <Link href={`/users/${user.username}`}
-                        className="text-blue-600 text-md font-medium"> {user.username ?? "User"} </Link>
+                    {user.username ? (
+                        <Link href={`/users/${user.username}`} className="min-w-0">
+                            <span className="block truncate text-sm font-medium text-foreground">
+                                {user.username}
+                            </span>
+                        </Link>
+                    ) : (
+                        <span className="block min-w-0 truncate text-sm font-medium text-foreground">
+                            User
+                        </span>
+                    )}
                 </div>
                 <button
                     onClick={logout}
-                    className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                    className={buttonVariants({ variant: "secondary", size: "sm" })}
                 >
                     Logout
                 </button>
@@ -62,12 +74,19 @@ export default function Loginbar() {
     }
 
     return (
-        <div className="flex items-center gap-2">
-            <Link href="/login"
-                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"> Login </Link>
-            <Link href="/users/register"
-                className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"> Register </Link>
+        <div className="flex flex-wrap items-center gap-2">
+            <Link
+                href="/login"
+                className={buttonVariants({ variant: "default", size: "sm" })}
+            >
+                Login
+            </Link>
+            <Link
+                href="/users/register"
+                className={cn(buttonVariants({ variant: "secondary", size: "sm" }))}
+            >
+                Register
+            </Link>
         </div>
-    )
-
+    );
 }

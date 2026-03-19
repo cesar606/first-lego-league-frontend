@@ -2,8 +2,8 @@
 
 import { UsersService } from "@/api/userApi";
 import { useAuth } from "@/app/components/authentication";
+import AuthPageShell from "@/app/components/auth-page-shell";
 import { Button } from "@/app/components/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/card";
 import { Input } from "@/app/components/input";
 import { Label } from "@/app/components/label";
 import { AUTH_COOKIE_NAME, clientAuthProvider } from "@/lib/authProvider";
@@ -17,6 +17,17 @@ type FormValues = {
     password: string;
 };
 
+function toBase64(value: string) {
+    const bytes = new TextEncoder().encode(value);
+    let binary = "";
+
+    for (const byte of bytes) {
+        binary += String.fromCodePoint(byte);
+    }
+
+    return btoa(binary);
+}
+
 export default function LoginPage() {
     const router = useRouter();
     const { setUser } = useAuth();
@@ -25,8 +36,7 @@ export default function LoginPage() {
 
     async function login(username: string, password: string) {
         setErrorMessage(null);
-        // Use Buffer for base64 encoding (Node.js compatible)
-        const base64 = Buffer.from(`${username}:${password}`).toString('base64');
+        const base64 = toBase64(`${username}:${password}`);
         const authorization = `Basic ${base64}`;
         setCookie(AUTH_COOKIE_NAME, authorization, {
             path: "/",
@@ -49,51 +59,50 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-            <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-                <div className="flex flex-col items-center w-full gap-6 text-center sm:items-start sm:text-left">
-                    <Card className="w-full max-w-md">
-                        <CardHeader>
-                            <CardTitle>login</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit(onSubmit)} className="grid gap-4">
-                                {errorMessage && ( // Display error message if present
-                                    <p className="text-sm text-red-600 mt-1">{errorMessage}</p>
-                                )}
-                                <div>
-                                    <Label htmlFor="username">Username</Label> {/* Changed htmlFor to username */}
-                                    <Input
-                                        id="username"
-                                        {...register("username", { required: "Username is required" })}
-                                    />
-                                    {errors.username && (
-                                        <p className="text-sm text-red-600 mt-1">{errors.username.message}</p>
-                                    )}
-                                </div>
-
-                                <div>
-                                    <Label htmlFor="password">Password</Label>
-                                    <Input
-                                        id="password"
-                                        type="password"
-                                        {...register("password", {
-                                            required: "Password is required"
-                                        })}
-                                    />
-                                    {errors.password && (
-                                        <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>
-                                    )}
-                                </div>
-
-                                <Button type="submit" className="mt-2" disabled={isSubmitting}>
-                                    {isSubmitting ? "logging in..." : "login"}
-                                </Button>
-                            </form>
-                        </CardContent>
-                    </Card>
+        <AuthPageShell
+            eyebrow="Member access"
+            title="Login"
+            description="Sign in to access your profile and protected routes."
+        >
+            <form onSubmit={handleSubmit(onSubmit)} className="mx-auto grid max-w-xl gap-5">
+                {errorMessage && (
+                    <p
+                        role="alert"
+                        aria-live="assertive"
+                        className="border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive"
+                    >
+                        {errorMessage}
+                    </p>
+                )}
+                <div className="grid gap-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input
+                        id="username"
+                        {...register("username", { required: "Username is required" })}
+                    />
+                    {errors.username && (
+                        <p className="text-sm text-destructive">{errors.username.message}</p>
+                    )}
                 </div>
-            </main>
-        </div>
+
+                <div className="grid gap-2">
+                    <Label htmlFor="password">Password</Label>
+                    <Input
+                        id="password"
+                        type="password"
+                        {...register("password", {
+                            required: "Password is required"
+                        })}
+                    />
+                    {errors.password && (
+                        <p className="text-sm text-destructive">{errors.password.message}</p>
+                    )}
+                </div>
+
+                <Button type="submit" className="mt-2 w-full" disabled={isSubmitting}>
+                    {isSubmitting ? "Logging in..." : "Login"}
+                </Button>
+            </form>
+        </AuthPageShell>
     );
 }

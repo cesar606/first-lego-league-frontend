@@ -1,3 +1,4 @@
+import PageShell from "@/app/components/page-shell";
 import Link from "next/link";
 
 export default function Home() {
@@ -5,54 +6,49 @@ export default function Home() {
     {
       href: "/teams",
       title: "Teams",
-      description: "Manage participating teams and access their details."
+      description: "Participating teams and details.",
     },
     {
       href: "/editions",
       title: "Editions",
-      description: "Explore competition editions and their related data."
+      description: "Competition seasons and venues.",
     },
     {
       href: "/scientific-projects",
       title: "Scientific Projects",
-      description: "Track scientific projects submitted during each edition."
+      description: "Innovation projects by edition.",
     }
   ];
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="w-full max-w-5xl p-8 sm:p-12">
-        <section className="rounded-2xl border border-zinc-200 bg-white p-8 shadow-sm dark:border-zinc-800 dark:bg-zinc-950">
-          <h1 className="text-3xl font-semibold tracking-tight text-zinc-900 dark:text-zinc-100">
-            First Lego League Frontend
-          </h1>
-          <p className="mt-3 max-w-2xl text-zinc-600 dark:text-zinc-300">
-            This is the navigation hub for the core competition entities.
-            Anyone can explore the current module placeholders, and future
-            authenticated actions will be added inside each module.
+    <PageShell
+      eyebrow="International STEM program"
+      title="First LEGO League"
+      description="Robotics, innovation and teamwork for young participants."
+    >
+      <div className="space-y-6">
+        <div className="space-y-3">
+          <div className="page-eyebrow">Competition hub</div>
+          <h2 className="section-title">Platform modules</h2>
+          <p className="section-copy max-w-2xl">
+            Explore the main areas of the platform for teams, editions and innovation projects.
           </p>
+        </div>
 
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {coreModules.map((module) => (
-              <Link
-                key={module.href}
-                href={module.href}
-                className="rounded-xl border border-zinc-200 bg-zinc-50 p-5 transition hover:border-blue-400 hover:bg-blue-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:border-blue-500 dark:hover:bg-zinc-800"
-              >
-                <h2 className="text-lg font-semibold text-zinc-900 dark:text-zinc-100">
-                  {module.title}
-                </h2>
-                <p className="mt-2 text-sm text-zinc-600 dark:text-zinc-300">
-                  {module.description}
-                </p>
-                <span className="mt-4 inline-block text-sm font-medium text-blue-600 dark:text-blue-400">
-                  Open module
-                </span>
-              </Link>
-            ))}
-          </div>
-        </section>
-      </main>
-    </div>
+        <div className="module-grid">
+          {coreModules.map((module) => (
+            <Link key={module.href} href={module.href} className="module-card">
+              <h2 className="module-title">{module.title}</h2>
+              <p className="module-copy">{module.description}</p>
+              <span className="module-link">Open module</span>
+            </Link>
+          ))}
+        </div>
+
+        <div className="border-t border-border pt-4 text-sm font-medium text-muted-foreground">
+          Innovation project, robot game and core values.
+        </div>
+      </div>
+    </PageShell>
   );
 }
