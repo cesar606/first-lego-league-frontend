@@ -13,12 +13,14 @@ export class EditionsService {
     }
 
     async getEditionById(id: string): Promise<Edition> {
-        const resource = await getHal(`/editions/${id}`, this.authStrategy);
+        const editionId = encodeURIComponent(id);
+        const resource = await getHal(`/editions/${editionId}`, this.authStrategy);
         return mergeHal<Edition>(resource);
     }
 
     async getEditionTeams(id: string): Promise<Team[]> {
-        const resource = await getHal(`/editions/${id}/teams`, this.authStrategy);
+        const editionId = encodeURIComponent(id);
+        const resource = await getHal(`/editions/${editionId}/teams`, this.authStrategy);
         const embedded = resource.embeddedArray('teams') || [];
         return mergeHalArray<Team>(embedded);
     }

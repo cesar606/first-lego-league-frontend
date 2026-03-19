@@ -1,14 +1,14 @@
 import { EditionsService } from "@/api/editionApi";
 import PageShell from "@/app/components/page-shell";
 import { serverAuthProvider } from "@/lib/authProvider";
+import { getEncodedResourceId } from "@/lib/halRoute";
 import { Edition } from "@/types/edition";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
 function getEditionHref(edition: Edition) {
-    const sanitizedUri = edition.uri?.split(/[?#]/, 1)[0] ?? "";
-    const segments = sanitizedUri.split("/").filter(Boolean);
-    return segments.at(-1) ? `/editions/${segments.at(-1)}` : null;
+    const editionId = getEncodedResourceId(edition.uri);
+    return editionId ? `/editions/${editionId}` : null;
 }
 
 function EditionHeading({ edition, children }: Readonly<{ edition: Edition; children: ReactNode }>) {
