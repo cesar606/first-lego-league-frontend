@@ -59,7 +59,6 @@ export default function LoginPage() {
             deleteCookie(AUTH_COOKIE_NAME);
             localStorage.removeItem(AUTH_COOKIE_NAME);
             
-            // Special case: Authentication errors on login should show credential-specific message
             if (error instanceof AuthenticationError) {
                 setErrorMessage("Invalid username or password. Please try again.");
             } else {
