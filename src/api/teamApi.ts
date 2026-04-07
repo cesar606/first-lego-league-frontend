@@ -6,6 +6,6 @@ export class TeamsService {
     constructor(private readonly authStrategy: AuthStrategy) {}
 
     async getTeams(): Promise<Team[]> {
-        return fetchHalCollection<Team>("/teams", this.authStrategy, "teams");
+        return fetchHalCollection<Team>('/teams', this.authStrategy, 'teams');
     }
 }

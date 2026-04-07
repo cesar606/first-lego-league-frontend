@@ -12,8 +12,8 @@ function getTeamDisplayName(team: Team) {
     return team.name ?? team.id ?? "Unnamed team";
 }
 
-function getTeamKey(team: Team) {
-    return team.uri ?? team.id ?? team.name ?? `team-${team.city ?? "unknown"}`;
+function getTeamKey(team: Team, index: number) {
+    return team.uri ?? team.id ?? team.name ?? `team-${index}`;
 }
 
 function TeamCard({ team }: Readonly<{ team: Team }>) {
@@ -84,8 +84,8 @@ export default async function TeamsPage() {
 
                 {!error && teams.length > 0 && (
                     <ul className="list-grid">
-                        {teams.map((team) => (
-                            <li key={getTeamKey(team)}>
+                        {teams.map((team, index) => (
+                            <li key={getTeamKey(team, index)}>
                                 <TeamCard team={team} />
                             </li>
                         ))}
