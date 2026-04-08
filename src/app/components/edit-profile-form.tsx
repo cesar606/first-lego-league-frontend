@@ -94,9 +94,19 @@ export default function EditProfileForm({ userId, currentEmail }: EditProfileFor
                         type="email"
                         autoComplete="email"
                         {...register("email", {
-                            pattern: {
-                                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                                message: "Invalid email address",
+                            maxLength: { value: 254, message: "Email must be 254 characters or fewer" },
+                            validate: (value) => {
+                                if (!value) return true;
+                                const atIndex = value.indexOf("@");
+                                if (atIndex < 1) return "Invalid email address";
+                                const local = value.slice(0, atIndex);
+                                const domain = value.slice(atIndex + 1);
+                                if (local.length > 64) return "Invalid email address";
+                                if (!domain.includes(".")) return "Invalid email address";
+                                const dotIndex = domain.lastIndexOf(".");
+                                if (dotIndex < 1 || dotIndex === domain.length - 1) return "Invalid email address";
+                                if (/\s/.test(value)) return "Invalid email address";
+                                return true;
                             },
                         })}
                     />
