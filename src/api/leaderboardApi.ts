@@ -1,3 +1,4 @@
+import { API_BASE_URL } from "@/api/halClient";
 import type { AuthStrategy } from "@/lib/authProvider";
 import type { LeaderboardPageResponse } from "@/types/leaderboard";
 import {
@@ -8,9 +9,6 @@ import {
     ServerError,
     ValidationError,
 } from "@/types/errors";
-
-const PROD_API_BASE_URL = "https://api.firstlegoleague.win";
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || PROD_API_BASE_URL;
 
 export class LeaderboardService {
     constructor(private readonly authStrategy: AuthStrategy) {}
@@ -35,21 +33,32 @@ export class LeaderboardService {
         }
 
         if (!res.ok) {
+            let errorMessage: string | undefined;
+            try {
+                const contentType = res.headers.get("content-type");
+                if (contentType?.toLowerCase().includes("json")) {
+                    const body = await res.json();
+                    errorMessage = body.message || body.error || body.detail;
+                }
+            } catch {
+                // ignore, fall back to generic messages
+            }
+
             switch (res.status) {
                 case 401:
                 case 403:
-                    throw new AuthenticationError(undefined, res.status);
+                    throw new AuthenticationError(errorMessage, res.status);
                 case 404:
-                    throw new NotFoundError();
+                    throw new NotFoundError(errorMessage);
                 case 400:
-                    throw new ValidationError();
+                    throw new ValidationError(errorMessage);
                 case 500:
                 case 502:
                 case 503:
                 case 504:
-                    throw new ServerError(undefined, res.status);
+                    throw new ServerError(errorMessage, res.status);
                 default:
-                    throw new ApiError("An error occurred. Please try again.", res.status, true);
+                    throw new ApiError(errorMessage ?? "An error occurred. Please try again.", res.status, true);
             }
         }
 

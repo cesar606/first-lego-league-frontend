@@ -43,10 +43,10 @@ export default async function LeaderboardPage(props: Readonly<LeaderboardPagePro
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="border-b text-left text-zinc-500">
-                                    <th className="pb-3 pr-4 font-medium">#</th>
-                                    <th className="pb-3 pr-4 font-medium">Team</th>
-                                    <th className="pb-3 pr-4 font-medium text-right">Total Score</th>
-                                    <th className="pb-3 font-medium text-right">Matches Played</th>
+                                    <th scope="col" className="pb-3 pr-4 font-medium">#</th>
+                                    <th scope="col" className="pb-3 pr-4 font-medium">Team</th>
+                                    <th scope="col" className="pb-3 pr-4 font-medium text-right">Total Score</th>
+                                    <th scope="col" className="pb-3 font-medium text-right">Matches Played</th>
                                 </tr>
                             </thead>
                             <tbody>
