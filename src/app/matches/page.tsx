@@ -4,7 +4,7 @@ import ErrorAlert from "@/app/components/error-alert";
 import PageShell from "@/app/components/page-shell";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { parseErrorMessage } from "@/types/errors";
-import { MatchDTO } from "@/types/match";
+import { Match } from "@/types/match";
 
 export const dynamic = "force-dynamic";
 
@@ -13,7 +13,7 @@ function formatMatchTime(value?: string | null) {
         return "Not available";
     }
 
-    const timeMatch = value.match(/^(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/);
+    const timeMatch = new RegExp(/^(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?$/).exec(value);
     if (timeMatch) {
         return `${timeMatch[1]}:${timeMatch[2]}`;
     }
@@ -29,17 +29,15 @@ function formatMatchTime(value?: string | null) {
     }).format(date);
 }
 
-function getTeamsLabel(match: MatchDTO) {
+function getTeamsLabel(match: Match) {
     return `${match.teamA} vs ${match.teamB}`;
 }
 
-function compareMatchTimes(left?: string | null, right?: string | null) {
-    const leftValue = left ?? "";
-    const rightValue = right ?? "";
-    return leftValue.localeCompare(rightValue);
+function compareMatchTimes(left: string = "", right: string = "") {
+    return left.localeCompare(right);
 }
 
-function getMatchKey(match: MatchDTO, index: number) {
+function getMatchKey(match: Match, index: number) {
     if (match.id !== undefined && match.id !== null) {
         return String(match.id);
     }
@@ -51,11 +49,11 @@ function getMatchKey(match: MatchDTO, index: number) {
     return match.link("self")?.href ?? `match-${index}`;
 }
 
-function MatchesTable({ matches }: Readonly<{ matches: MatchDTO[] }>) {
+function MatchesTable({ matches }: Readonly<{ matches: Match[] }>) {
     return (
         <div className="overflow-hidden border border-border">
             <div className="overflow-x-auto">
-                <table className="w-full min-w-[42rem] border-collapse text-left">
+                <table className="w-full min-w-2xl border-collapse text-left">
                     <caption className="sr-only">List of matches with start time, end time and teams.</caption>
                     <thead className="bg-secondary/70">
                         <tr>
@@ -99,7 +97,7 @@ function getFriendlyMatchesError(error: unknown) {
 }
 
 export default async function MatchesPage() {
-    let matches: MatchDTO[] = [];
+    let matches: Match[] = [];
     let error: string | null = null;
 
     try {

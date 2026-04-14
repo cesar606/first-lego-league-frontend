@@ -13,5 +13,4 @@ export interface MatchEntity {
     state: string;
 }
 
-export type MatchDTO = MatchEntity & Resource;
-export type Match = MatchDTO;
+export type Match = MatchEntity & Resource;
