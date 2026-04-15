@@ -6,43 +6,16 @@ import { AddMemberForm } from './add-member-form';
 import { DeleteMemberDialog } from './delete-member-dialog';
 import { useTeamMembers } from '@/hooks/useTeamMembers';
 
-export function TeamMembersManager({
-    teamId,
-    initialMembers = [],
-    isCoach,
-    isAdmin
-}: any) {
+export function TeamMembersManager({ teamId, initialMembers, isCoach, isAdmin }: any) {
     const isAuthorized = isCoach || isAdmin;
-
-    const {
-        members,
-        addMember,
-        removeMember,
-        isFull
-    } = useTeamMembers(teamId, initialMembers);
-
+    const { members, addMember, removeMember, isFull } = useTeamMembers(teamId, initialMembers);
     const [showForm, setShowForm] = useState(false);
     const [selected, setSelected] = useState<any>(null);
-
-    const safeMembers = (members ?? []).filter(
-        (m: any) => m && typeof m === 'object'
-    );
 
     return (
         <div className="space-y-4">
             {isAuthorized && !isFull && (
-                <Button
-                    onClick={() => setShowForm(true)}
-                    disabled={isFull}
-                >
-                    Add Member
-                </Button>
-            )}
-
-            {isFull && (
-                <p className="text-yellow-600">
-                    Max members reached
-                </p>
+                <Button onClick={() => setShowForm(true)}>Add Member</Button>
             )}
 
             {showForm && (
@@ -50,32 +23,21 @@ export function TeamMembersManager({
                     onSubmit={async (name, role) => {
                         const success = await addMember(name, role);
                         if (success) setShowForm(false);
+                        return success;
                     }}
                     onCancel={() => setShowForm(false)}
                 />
             )}
 
             <ul className="space-y-2">
-                {safeMembers.map((m: any, index: number) => (
-                    <li
-                        key={
-                            m?._links?.self?.href ||
-                            m?.uri ||
-                            m?.id ||
-                            `${m?.name ?? 'member'}-${index}`
-                        }
-                        className="flex items-center justify-between border p-3 rounded-lg bg-white shadow-sm dark:bg-zinc-900"
-                    >
-                        <span className="font-medium">
-                            {m.name ?? "Unnamed member"}
-                        </span>
-
+                {members.map((m: any) => (
+                    <li key={m.uri || m.id} className="flex items-center justify-between border p-3 rounded-lg bg-white">
+                        <div>
+                            <span className="font-medium block">{m.name}</span>
+                            <span className="text-xs text-zinc-500 uppercase">{m.role}</span>
+                        </div>
                         {isAuthorized && (
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={() => setSelected(m)}
-                            >
+                            <Button variant="destructive" size="sm" onClick={() => setSelected(m)}>
                                 Delete
                             </Button>
                         )}
@@ -83,17 +45,16 @@ export function TeamMembersManager({
                 ))}
             </ul>
 
-            <DeleteMemberDialog
-                isOpen={!!selected}
-                onCancel={() => setSelected(null)}
-                onConfirm={async () => {
-                    const deleteUrl = selected?._links?.self?.href || selected?.uri;
-                    if (!deleteUrl) return;
-
-                    await removeMember(deleteUrl);
-                    setSelected(null);
-                }}
-            />
+            {selected && (
+                <DeleteMemberDialog
+                    member={selected}
+                    onCancel={() => setSelected(null)}
+                    onSuccess={(uri: string) => {
+                        removeMember(uri); 
+                        setSelected(null);
+                    }}
+                />
+            )}
         </div>
     );
 }

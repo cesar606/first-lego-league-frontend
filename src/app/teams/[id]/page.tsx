@@ -14,10 +14,12 @@ interface TeamDetailPageProps {
 
 function extractTeamMembers(data: any): any[] {
     const rawMembers = Array.isArray(data) ? data : (data?._embedded?.teamMembers ?? []);
-    
-    return rawMembers.map((m: any) => {
+
+    return rawMembers.map((m: any, index: number) => {
+        const extractedId = m._links?.self?.href?.split('/').pop() || m.uri?.split('/').pop();
+
         return {
-            id: String(m.id ?? m.uri?.split('/').pop() ?? Math.random().toString()),
+            id: String(m.id ?? extractedId ?? `member-${index}`),
             name: String(m.name ?? m.username ?? "Unnamed member"),
             role: String(m.role ?? "Member"),
             uri: String(m._links?.self?.href || m.uri || "")
@@ -27,7 +29,7 @@ function extractTeamMembers(data: any): any[] {
 
 export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps>) {
     const { id } = await props.params;
-    
+
     const service = new TeamsService(serverAuthProvider);
     const userService = new UsersService(serverAuthProvider);
 
@@ -39,7 +41,6 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
     let membersError: string | null = null;
 
     try {
-        // Intentamos obtener el usuario, pero no redirigimos si falla
         currentUser = await userService.getCurrentUser().catch(() => null);
         team = await service.getTeamById(id);
     } catch (e) {
@@ -66,7 +67,6 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
     if (error) return <ErrorAlert message={error} />;
     if (!team) return <EmptyState title="Not found" description="Team does not exist" />;
 
-    // Solo calculamos permisos si hay un usuario logueado
     const isAdmin = !!currentUser?.authorities?.some(
         (authority) => authority.authority === "ROLE_ADMIN"
     );
@@ -75,8 +75,8 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
         (c) => c.username === currentUser?.username || c.email === currentUser?.email
     );
 
-    const coachName = coaches.length > 0 
-        ? (coaches[0].name ?? coaches[0].username ?? coaches[0].email ?? "Unnamed coach") 
+    const coachName = coaches.length > 0
+        ? (coaches[0].name ?? coaches[0].username ?? coaches[0].email ?? "Unnamed coach")
         : "No coach assigned";
 
     return (
@@ -97,7 +97,7 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                             key={`${id}-${members.length}`}
                             teamId={id}
                             initialMembers={members}
-                            isCoach={isCoach} 
+                            isCoach={isCoach}
                             isAdmin={isAdmin}
                         />
                     )}
