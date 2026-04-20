@@ -1,3 +1,4 @@
+import { EditionsService } from "@/api/editionApi";
 import { TeamsService } from "@/api/teamApi";
 import EmptyState from "@/app/components/empty-state";
 import ErrorAlert from "@/app/components/error-alert";
@@ -60,13 +61,30 @@ function TeamCard({ team }: Readonly<{ team: Team }>) {
     );
 }
 
-export default async function TeamsPage() {
+type PageSearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function TeamsPage({ searchParams }: Readonly<{ searchParams: PageSearchParams }>) {
     let teams: Team[] = [];
     let error: string | null = null;
+    let yearQuery = "";
 
     try {
+        const params = await searchParams;
+        const yearParam = params.year;
+        const year = Array.isArray(yearParam) ? yearParam[0] : yearParam;
+        yearQuery = year ? `?year=${year}` : "";
         const service = new TeamsService(serverAuthProvider);
-        teams = await service.getTeams();
+
+        if (year) {
+            const editionsService = new EditionsService(serverAuthProvider);
+            const edition = await editionsService.getEditionByYear(year);
+
+            if (edition && edition.uri) {
+                teams = await service.getTeamsByEdition(edition.uri + "/teams");
+            }
+        } else {
+            teams = await service.getTeams();
+        }
     } catch (e) {
         console.error("Failed to fetch teams:", e);
         error = getTeamErrorMessage(e);
@@ -100,7 +118,7 @@ export default async function TeamsPage() {
                     <ul className="list-grid">
                         {teams.map((team, index) => {
                             const teamId = getEncodedResourceId(team.uri);
-                            const href = teamId ? `/teams/${teamId}` : null;
+                            const href = teamId ? `/teams/${teamId}${yearQuery}` : null;
                             return (
                                 <li key={getTeamKey(team, index)}>
                                     {href ? (

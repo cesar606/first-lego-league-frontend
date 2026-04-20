@@ -54,7 +54,9 @@ function EditionCard({ edition }: Readonly<{ edition: Edition }>) {
     );
 }
 
-export default async function EditionsPage() {
+type EditionsPageSearchParams = Promise<Record<string, string | string[] | undefined>>;
+
+export default async function EditionsPage({ searchParams }: Readonly<{ searchParams: EditionsPageSearchParams }>) {
     let editions: Edition[] = [];
     let error: string | null = null;
     let currentUser: User | null = null;
@@ -66,8 +68,17 @@ export default async function EditionsPage() {
     }
 
     try {
+        const params = await searchParams;
+        const rawYear = params.year;
+        const year = Array.isArray(rawYear) ? rawYear[0] : rawYear;
         const service = new EditionsService(serverAuthProvider);
-        editions = await service.getEditions();
+
+        if (year?.trim()) {
+            const edition = await service.getEditionByYear(year.trim());
+            editions = edition ? [edition] : [];
+        } else {
+            editions = await service.getEditions();
+        }
     } catch (e) {
         console.error("Failed to fetch editions:", e);
         error = parseErrorMessage(e);

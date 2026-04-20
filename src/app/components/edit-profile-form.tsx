@@ -10,7 +10,7 @@ import { parseErrorMessage } from "@/types/errors";
 import { CheckCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { SubmitHandler, useForm } from "react-hook-form";
+import { SubmitHandler, useForm, useWatch } from "react-hook-form";
 
 interface EditProfileFormProps {
     readonly userId: string;
@@ -32,14 +32,14 @@ export default function EditProfileForm({ userId, currentEmail }: EditProfileFor
     const {
         register,
         handleSubmit,
-        watch,
+        control,
         reset,
         formState: { errors, isSubmitting },
     } = useForm<FormValues>({
         defaultValues: { email: currentEmail ?? "", password: "", confirmPassword: "" },
     });
 
-    const passwordValue = watch("password");
+    const passwordValue = useWatch({ control, name: "password" });
 
     const onSubmit: SubmitHandler<FormValues> = async (data) => {
         setSuccessMessage(null);

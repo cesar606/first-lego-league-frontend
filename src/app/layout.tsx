@@ -1,6 +1,7 @@
 import { AuthProvider } from "@/app/components/authentication";
 import Navbar from "@/app/components/navbar";
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -22,7 +23,9 @@ export default function RootLayout({
             if (theme === 'dark') document.documentElement.classList.add('dark');
           `}} />
         <AuthProvider>
-          <Navbar />
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
           {children}
         </AuthProvider>
       </body>

@@ -11,6 +11,13 @@ export class ScientificProjectsService {
         return mergeHalArray<ScientificProject>(embedded);
     }
 
+    async getScientificProjectsByEdition(editionId: string): Promise<ScientificProject[]> {
+        const encodedId = encodeURIComponent(editionId);
+        const resource = await getHal(`/scientificProjects/search/findByEditionId?editionId=${encodedId}`, this.authStrategy);
+        const embedded = resource.embeddedArray('scientificProjects') || [];
+        return mergeHalArray<ScientificProject>(embedded);
+    }
+
     async getScientificProjectById(id: string): Promise<ScientificProject> {
         const projectId = encodeURIComponent(id);
         return fetchHalResource<ScientificProject>(`/scientificProjects/${projectId}`, this.authStrategy);
@@ -21,4 +28,5 @@ export class ScientificProjectsService {
         if (!resource) throw new Error('Failed to create scientific project');
         return mergeHal<ScientificProject>(resource);
     }
+
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useCallback, useMemo, useEffect } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { TeamsService } from '@/api/teamApi';
 import { clientAuthProvider } from '@/lib/authProvider';
 import { User } from '@/types/user';
@@ -9,10 +9,12 @@ export function useTeamMembers(teamId: string, initialMembers: User[] = []) {
     const [members, setMembers] = useState<User[]>(initialMembers);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [prevInitialMembers, setPrevInitialMembers] = useState<User[]>(initialMembers);
 
-    useEffect(() => {
+    if (initialMembers !== prevInitialMembers) {
+        setPrevInitialMembers(initialMembers);
         setMembers(initialMembers);
-    }, [initialMembers]);
+    }
 
     const service = useMemo(
         () => new TeamsService(clientAuthProvider),
