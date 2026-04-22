@@ -1,4 +1,5 @@
 import type { AuthStrategy } from "@/lib/authProvider";
+import type { HalPage } from "@/types/pagination";
 import { CompetitionTable } from "@/types/competitionTable";
 import { Match } from "@/types/match";
 import { MatchResult, MatchResultEntity, RegisterMatchScoreRequest, RegisterMatchScoreResponse } from "@/types/matchResult";
@@ -6,7 +7,7 @@ import { Referee } from "@/types/referee";
 import { Round } from "@/types/round";
 import { Team } from "@/types/team";
 import { ApiError } from "@/types/errors";
-import { createHalResource, fetchHalCollection, fetchHalResource, postHal } from "./halClient";
+import { createHalResource, fetchHalCollection, fetchHalPagedCollection, fetchHalResource, postHal } from "./halClient";
 
 export type CreateMatchPayload = {
     startTime: string;
