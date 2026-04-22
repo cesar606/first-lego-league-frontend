@@ -5,6 +5,7 @@ import { serverAuthProvider } from "@/lib/authProvider";
 import { getEncodedResourceId } from "@/lib/halRoute";
 import { Edition } from "@/types/edition";
 import { Team } from "@/types/team";
+import { User } from "@/types/user";
 import { parseErrorMessage, NotFoundError } from "@/types/errors";
 import Link from "next/link";
 import { getTeamDisplayName } from "@/lib/teamUtils";
