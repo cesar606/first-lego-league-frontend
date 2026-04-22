@@ -17,7 +17,6 @@ import {
     TeamCoach,
     TeamMember,
     TeamMemberGender,
-    UpdateTeamFormPayload, // ✅ FIX: faltaba este import
 } from "@/types/team";
 import {
     API_BASE_URL,
@@ -51,11 +50,11 @@ export class TeamsService {
     }
 
     async getTeamsByEdition(editionUri: string): Promise<Team[]> {
-        return fetchHalCollection<Team>(editionUri, this.authStrategy, "teams");
+        return fetchHalCollection<Team>(editionUri, this.authStrategy, 'teams');
     }
 
     async getTeamsPaged(page: number, size: number): Promise<HalPage<Team>> {
-        return fetchHalPagedCollection<Team>("/teams", this.authStrategy, "teams", page, size);
+        return fetchHalPagedCollection<Team>('/teams', this.authStrategy, 'teams', page, size);
     }
 
     async getTeamById(id: string): Promise<Team> {
@@ -135,7 +134,9 @@ export class TeamsService {
     async getCoachByEmail(emailAddress: string): Promise<TeamCoach | null> {
         const normalizedEmail = emailAddress.trim();
 
-        if (!normalizedEmail) return null;
+        if (!normalizedEmail) {
+            return null;
+        }
 
         try {
             return await fetchHalResource<TeamCoach>(
@@ -143,7 +144,10 @@ export class TeamsService {
                 this.authStrategy
             );
         } catch (error) {
-            if (error instanceof NotFoundError) return null;
+            if (error instanceof NotFoundError) {
+                return null;
+            }
+
             throw error;
         }
     }
@@ -152,7 +156,6 @@ export class TeamsService {
         const authorization = await this.authStrategy.getAuth();
 
         let response: Response;
-
         try {
             response = await fetch(`${API_BASE_URL}/teams/assign-coach`, {
                 method: "POST",
@@ -161,13 +164,17 @@ export class TeamsService {
                     "Content-Type": "application/json",
                     ...(authorization ? { Authorization: authorization } : {}),
                 },
-                body: JSON.stringify({ teamId, coachId }),
+                body: JSON.stringify({
+                    teamId,
+                    coachId,
+                }),
                 cache: "no-store",
             });
         } catch (error) {
             if (error instanceof TypeError) {
                 throw new NetworkError(undefined, error);
             }
+
             throw error;
         }
 
@@ -212,7 +219,6 @@ export class TeamsService {
                 );
         }
     }
-
     async deleteTeam(id: string): Promise<void> {
         const teamId = getSafeEncodedId(id);
         await deleteHal(`/teams/${teamId}`, this.authStrategy);
@@ -225,8 +231,7 @@ export class TeamsService {
     async removeTeamMember(memberUri: string): Promise<void> {
         await deleteHal(memberUri, this.authStrategy);
     }
-
-    async updateTeam(id: string, data: UpdateTeamFormPayload): Promise<Team> {
+    async updateTeam(id: string, data: UpdateTeamFormPayload): Promise<Team>{
         const teamId = getSafeEncodedId(id);
         const authorization = await this.authStrategy.getAuth();
 
