@@ -4,20 +4,24 @@ import PageShell from "@/app/components/page-shell";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { parseErrorMessage } from "@/types/errors";
 import { Volunteer } from "@/types/volunteer";
-import VolunteersClient from "./_volunteers-client";
+import VolunteersClient, { VolunteerItem } from "./_volunteers-client";
+
+function toVolunteerItem(v: Volunteer): VolunteerItem {
+    return { name: v.name, emailAddress: v.emailAddress, type: v.type };
+}
 
 export default async function VolunteersPage() {
     const service = new VolunteersService(serverAuthProvider);
-    let judges: Volunteer[] = [];
-    let referees: Volunteer[] = [];
-    let floaters: Volunteer[] = [];
+    let judges: VolunteerItem[] = [];
+    let referees: VolunteerItem[] = [];
+    let floaters: VolunteerItem[] = [];
     let error: string | null = null;
 
     try {
         const data = await service.getVolunteers();
-        judges = data.judges;
-        referees = data.referees;
-        floaters = data.floaters;
+        judges = data.judges.map(toVolunteerItem);
+        referees = data.referees.map(toVolunteerItem);
+        floaters = data.floaters.map(toVolunteerItem);
     } catch (e) {
         console.error("Failed to fetch volunteers:", e);
         error = parseErrorMessage(e);

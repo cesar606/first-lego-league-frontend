@@ -2,23 +2,29 @@
 
 import EmptyState from '@/app/components/empty-state';
 import { Input } from '@/app/components/input';
-import { Volunteer } from '@/types/volunteer';
+import { VolunteerRole } from '@/types/volunteer';
 import { useState } from 'react';
 
+export interface VolunteerItem {
+    name?: string;
+    emailAddress?: string;
+    type?: VolunteerRole;
+}
+
 interface VolunteersClientProps {
-    judges: Volunteer[];
-    referees: Volunteer[];
-    floaters: Volunteer[];
+    judges: VolunteerItem[];
+    referees: VolunteerItem[];
+    floaters: VolunteerItem[];
 }
 
 interface VolunteerSectionProps {
     title: string;
     typePlural: string;
-    volunteers: Volunteer[];
+    volunteers: VolunteerItem[];
     emptyMessage: string;
 }
 
-function filterByName(volunteers: Volunteer[], query: string): Volunteer[] {
+function filterByName(volunteers: VolunteerItem[], query: string): VolunteerItem[] {
     const q = query.trim().toLowerCase();
     if (!q) return volunteers;
     return volunteers.filter(v => v.name?.toLowerCase().includes(q));
