@@ -130,7 +130,7 @@ export function AddMemberForm({
                     type="submit"
                     loading={isLoading}
                     loadingText="Adding member..."
-                    disabled={!name.trim() || !role}
+                    disabled={!name.trim() || !role || !birthDate}
                 >
                     Add Member
                 </Button>
