@@ -17,6 +17,19 @@ export type UpdateEditionPayload = {
     description?: string;
 };
 
+function normalizeResourcePath(resourceUri: string) {
+    if (resourceUri.startsWith("/")) {
+        return resourceUri;
+    }
+
+    try {
+        const parsed = new URL(resourceUri);
+        return `${parsed.pathname}${parsed.search}`;
+    } catch {
+        return resourceUri;
+    }
+}
+
 export class EditionsService {
     constructor(private readonly authStrategy: AuthStrategy) {}
 
@@ -31,6 +44,10 @@ export class EditionsService {
     async getEditionById(id: string): Promise<Edition> {
         const editionId = encodeURIComponent(id);
         return fetchHalResource<Edition>(`/editions/${editionId}`, this.authStrategy);
+    }
+
+    async getEditionByUri(resourceUri: string): Promise<Edition> {
+        return fetchHalResource<Edition>(normalizeResourcePath(resourceUri), this.authStrategy);
     }
 
     async getEditionByYear(year: string | number): Promise<Edition | null> {

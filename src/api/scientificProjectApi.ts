@@ -1,7 +1,7 @@
 import type { AuthStrategy } from "@/lib/authProvider";
 import type { HalPage } from "@/types/pagination";
 import { ScientificProject } from "@/types/scientificProject";
-import { deleteHal, fetchHalCollection, fetchHalPagedCollection, fetchHalResource, getHal, mergeHal, mergeHalArray, postHal } from "./halClient";
+import { deleteHal, fetchHalCollection, fetchHalPagedCollection, fetchHalResource, getHal, mergeHal, mergeHalArray, patchHal, postHal } from "./halClient";
 
 export class ScientificProjectsService {
     constructor(private readonly authStrategy: AuthStrategy) { }
@@ -47,6 +47,18 @@ export class ScientificProjectsService {
         const resource = await postHal('/scientificProjects', project, this.authStrategy);
         if (!resource) throw new Error('Failed to create scientific project');
         return mergeHal<ScientificProject>(resource);
+    }
+
+    async updateScientificProject(
+        id: string,
+        data: {
+            score: number;
+            comments: string;
+        }
+    ): Promise<ScientificProject | null> {
+        const projectId = encodeURIComponent(id);
+        const resource = await patchHal(`/scientificProjects/${projectId}`, data, this.authStrategy);
+        return resource ? mergeHal<ScientificProject>(resource) : null;
     }
 
     async deleteScientificProject(id: string): Promise<void> {
