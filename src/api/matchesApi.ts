@@ -53,6 +53,11 @@ export class MatchesService {
         return fetchHalResource<Match>(`/matches/${matchId}`, this.authStrategy);
     }
 
+    async getMatchRound(id: string): Promise<Round> {
+        const matchId = encodeURIComponent(id);
+        return fetchHalResource<Round>(`/matches/${matchId}/round`, this.authStrategy);
+    }
+
     async getMatchTeams(id: string): Promise<Team[]> {
         const matchId = encodeURIComponent(id);
         return fetchHalCollection<Team>(`/matches/${matchId}/teams`, this.authStrategy, "teams");
