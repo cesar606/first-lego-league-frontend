@@ -3,11 +3,12 @@ import { EditionsService } from "@/api/editionApi";
 import { LeaderboardService } from "@/api/leaderboardApi";
 import ErrorAlert from "@/app/components/error-alert";
 import EmptyState from "@/app/components/empty-state";
+import LeaderboardTable from "@/app/components/leaderboard-table";
 import { serverAuthProvider } from "@/lib/authProvider";
+import type { LeaderboardItem } from "@/types/leaderboard";
 import { getEncodedResourceId } from "@/lib/halRoute";
 import { Award } from "@/types/award";
 import { Edition } from "@/types/edition";
-import type { LeaderboardItem } from "@/types/leaderboard";
 import { Team } from "@/types/team";
 import { parseErrorMessage, NotFoundError } from "@/types/errors";
 import Link from "next/link";
@@ -253,39 +254,7 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
                             )}
 
                             {!classificationError && leaderboardItems.length > 0 && (
-                                <table className="w-full text-sm">
-                                    <thead>
-                                        <tr className="border-b border-border text-left text-muted-foreground">
-                                            <th scope="col" className="pb-3 pr-4 font-medium">#</th>
-                                            <th scope="col" className="pb-3 pr-4 font-medium">Team</th>
-                                            <th scope="col" className="pb-3 pr-4 font-medium text-right">Total Score</th>
-                                            <th scope="col" className="pb-3 font-medium text-right">Matches Played</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {leaderboardItems.map((item) => {
-                                            const isTop3 = item.position <= 3;
-                                            return (
-                                                <tr key={item.teamId} className="border-b border-border last:border-0">
-                                                    <td className={`py-3 pr-4 ${isTop3 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-                                                        {item.position}
-                                                    </td>
-                                                    <td className={`py-3 pr-4 ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                        <Link href={`/teams/${encodeURIComponent(item.teamId)}`} className="hover:underline">
-                                                            {item.teamName}
-                                                        </Link>
-                                                    </td>
-                                                    <td className={`py-3 pr-4 text-right ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                        {item.totalScore}
-                                                    </td>
-                                                    <td className={`py-3 text-right ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                        {item.matchesPlayed}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
+                                <LeaderboardTable items={leaderboardItems} />
                             )}
                         </>
                     )}

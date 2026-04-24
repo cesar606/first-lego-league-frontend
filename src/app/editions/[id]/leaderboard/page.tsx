@@ -1,10 +1,10 @@
 import { LeaderboardService } from "@/api/leaderboardApi";
 import ErrorAlert from "@/app/components/error-alert";
 import EmptyState from "@/app/components/empty-state";
+import LeaderboardTable from "@/app/components/leaderboard-table";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { parseErrorMessage } from "@/types/errors";
 import type { LeaderboardItem } from "@/types/leaderboard";
-import Link from "next/link";
 
 interface LeaderboardPageProps {
     readonly params: Promise<{ id: string }>;
@@ -44,44 +44,7 @@ export default async function LeaderboardPage(props: Readonly<LeaderboardPagePro
                         />
                     )}
 
-                    {!error && items.length > 0 && (
-                        <table className="w-full text-sm">
-                            <thead>
-                                <tr className="border-b border-border text-left text-muted-foreground">
-                                    <th scope="col" className="pb-3 pr-4 font-medium">#</th>
-                                    <th scope="col" className="pb-3 pr-4 font-medium">Team</th>
-                                    <th scope="col" className="pb-3 pr-4 font-medium text-right">Total Score</th>
-                                    <th scope="col" className="pb-3 font-medium text-right">Matches Played</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {items.map((item) => {
-                                    const isTop3 = item.position <= 3;
-                                    return (
-                                        <tr key={item.teamId} className="border-b border-border last:border-0">
-                                            <td className={`py-3 pr-4 text-sm ${isTop3 ? "font-semibold text-foreground" : "text-muted-foreground"}`}>
-                                                {item.position}
-                                            </td>
-                                            <td className={`py-3 pr-4 ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                <Link
-                                                    href={`/teams/${encodeURIComponent(item.teamId)}`}
-                                                    className="hover:underline"
-                                                >
-                                                    {item.teamName}
-                                                </Link>
-                                            </td>
-                                            <td className={`py-3 pr-4 text-right ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                {item.totalScore}
-                                            </td>
-                                            <td className={`py-3 text-right ${isTop3 ? "font-semibold text-foreground" : ""}`}>
-                                                {item.matchesPlayed}
-                                            </td>
-                                        </tr>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    )}
+                    {!error && items.length > 0 && <LeaderboardTable items={items} />}
                 </div>
             </div>
         </div>
