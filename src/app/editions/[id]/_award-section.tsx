@@ -112,7 +112,7 @@ export default function AwardSection({
             const result = await updateAward(resourceUri, editionId, formData);
 
             if (!result.success) {
-                setErrorMessage(result.error);
+                setErrorMessage(result.error ?? "An unexpected error occurred.");
                 return;
             }
 
