@@ -5,17 +5,18 @@ import { TeamsService } from "@/api/teamApi";
 import { UsersService } from "@/api/userApi";
 import EmptyState from "@/app/components/empty-state";
 import ErrorAlert from "@/app/components/error-alert";
-import AddAwardForm from "./_add-award-form";
-import type { AwardOption } from "./_add-award-form";
 import { ScientificProjectCardLink } from "@/app/components/scientific-project-card";
 import { TeamMembersManager } from "@/app/components/team-member-manager";
 import TeamEditSection from "@/app/components/team-edit-section";
 import { serverAuthProvider } from "@/lib/authProvider";
+import { getAwardWinnerTeamUri, normalizeUri } from "@/lib/awardUtils";
+import { getEditionOptionLabel } from "@/lib/editionUtils";
 import { NotFoundError, parseErrorMessage } from "@/types/errors";
 import { Award } from "@/types/award";
 import { ScientificProject } from "@/types/scientificProject";
 import { Team, TeamCoach, TeamMember, TeamMemberSnapshot } from "@/types/team";
 import { User } from "@/types/user";
+import TeamAwardsSection from "./_team-awards-section";
 
 interface TeamDetailPageProps {
     readonly params: Promise<{ id: string }>;
@@ -52,46 +53,6 @@ function getTeamEditionUri(team: Team): string | null {
     return typeof edition === "string" && edition.length > 0 ? edition : null;
 }
 
-function getAwardLabel(award: Award, fallbackIndex: number): string {
-    return award.name ?? award.title ?? award.category ?? `Award ${fallbackIndex + 1}`;
-}
-
-function getAwardWinnerTeamUri(award: Award): string | null {
-    const winnerTeamFromLink = award.link("winnerTeam")?.href;
-    if (winnerTeamFromLink) {
-        return winnerTeamFromLink;
-    }
-
-    if (typeof award.winnerTeam === "string" && award.winnerTeam.length > 0) {
-        return award.winnerTeam;
-    }
-
-    const winnerFromLink = award.link("winner")?.href;
-    if (winnerFromLink) {
-        return winnerFromLink;
-    }
-
-    const winner = Reflect.get(award, "winner");
-    if (typeof winner === "string" && winner.length > 0) {
-        return winner;
-    }
-
-    return null;
-}
-
-function normalizeUri(resourceUri: string | null | undefined): string | null {
-    if (!resourceUri) {
-        return null;
-    }
-
-    const sanitizedUri = resourceUri.split(/[?#]/, 1)[0] ?? null;
-    if (!sanitizedUri) {
-        return null;
-    }
-
-    return sanitizedUri.replace(/^https?:\/\/[^/]+/i, "");
-}
-
 export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps>) {
     const { id } = await props.params;
 
@@ -107,7 +68,7 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
     let members: TeamMember[] = [];
     let scientificProjects: ScientificProject[] = [];
     let awards: Award[] = [];
-    let editionOptions: AwardOption[] = [];
+    let editionOptions: { label: string; value: string }[] = [];
     let teamEditionUri: string | null = null;
 
     let error: string | null = null;
@@ -176,7 +137,7 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
             try {
                 const editions = await editionsService.getEditions();
                 editionOptions = editions.map((edition) => ({
-                    label: `${edition.year ?? "Edition"}${edition.venueName ? ` - ${edition.venueName}` : ""}`,
+                    label: getEditionOptionLabel(edition),
                     value: edition.link("self")?.href ?? edition.uri ?? "",
                 })).filter(option => option.value.length > 0);
             } catch (e) {
@@ -244,64 +205,16 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                         </div>
                     )}
 
-                    <section aria-labelledby="team-awards-heading">
-                        <h2 id="team-awards-heading" className="mt-8 mb-4 text-xl font-semibold">
-                            Awards
-                        </h2>
-
-                        {currentUser && isAdminUser && teamEditionUri && !editionsError && (
-                            <div className="mb-4">
-                                <AddAwardForm
-                                    teamId={id}
-                                    teamName={teamDisplayName ?? team.id ?? "Team"}
-                                    editionOptions={editionOptions.length > 0 ? editionOptions : [
-                                        {
-                                            label: "Current edition",
-                                            value: teamEditionUri,
-                                        },
-                                    ]}
-                                    defaultEdition={teamEditionUri}
-                                />
-                            </div>
-                        )}
-
-                        {currentUser && isAdminUser && !teamEditionUri && (
-                            <ErrorAlert message="This team is not linked to an edition, so awards cannot be created yet." />
-                        )}
-
-                        {editionsError && currentUser && isAdminUser && (
-                            <ErrorAlert message={`Could not load editions for the award form. ${editionsError}`} />
-                        )}
-
-                        {awardsError && (
-                            <ErrorAlert message={`Could not load awards. ${awardsError}`} />
-                        )}
-
-                        {!awardsError && awards.length === 0 && (
-                            <EmptyState
-                                title="No awards yet"
-                                description="This team has not received any awards yet."
-                                className="py-8"
-                            />
-                        )}
-
-                        {!awardsError && awards.length > 0 && (
-                            <ul className="space-y-3">
-                                {awards.map((award, index) => (
-                                    <li
-                                        key={award.uri ?? award.link("self")?.href ?? index}
-                                        className="rounded-lg border border-border bg-card p-4 shadow-sm"
-                                    >
-                                        <p className="font-medium text-foreground">{getAwardLabel(award, index)}</p>
-                                        <div className="mt-1 text-sm text-muted-foreground">
-                                            {award.title && <p>{award.title}</p>}
-                                            {award.category && <p>{award.category}</p>}
-                                        </div>
-                                    </li>
-                                ))}
-                            </ul>
-                        )}
-                    </section>
+                    <TeamAwardsSection
+                        teamId={id}
+                        teamName={teamDisplayName ?? team.id ?? "Team"}
+                        awards={awards}
+                        awardsError={awardsError}
+                        isAdminUser={isAdminUser}
+                        teamEditionUri={teamEditionUri}
+                        editionOptions={editionOptions}
+                        editionsError={editionsError}
+                    />
 
                     <h2 className="mt-8 mb-4 text-xl font-semibold">
                         Team Members
