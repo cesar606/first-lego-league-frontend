@@ -1,13 +1,18 @@
+import { AwardsService } from "@/api/awardApi";
+import { EditionsService } from "@/api/editionApi";
 import { ScientificProjectsService } from "@/api/scientificProjectApi";
 import { TeamsService } from "@/api/teamApi";
 import { UsersService } from "@/api/userApi";
 import EmptyState from "@/app/components/empty-state";
 import ErrorAlert from "@/app/components/error-alert";
+import AddAwardForm from "./_add-award-form";
+import type { AwardOption } from "./_add-award-form";
 import { ScientificProjectCardLink } from "@/app/components/scientific-project-card";
 import { TeamMembersManager } from "@/app/components/team-member-manager";
 import TeamEditSection from "@/app/components/team-edit-section";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { NotFoundError, parseErrorMessage } from "@/types/errors";
+import { Award } from "@/types/award";
 import { ScientificProject } from "@/types/scientificProject";
 import { Team, TeamCoach, TeamMember, TeamMemberSnapshot } from "@/types/team";
 import { User } from "@/types/user";
@@ -33,22 +38,83 @@ function getTeamDisplayName(team: Team | null): string | null {
     return team.name ?? team.id ?? null;
 }
 
+function getTeamUri(team: Team): string | null {
+    return team.link("self")?.href ?? team.uri ?? null;
+}
+
+function getTeamEditionUri(team: Team): string | null {
+    const editionHref = team.link("edition")?.href;
+    if (editionHref) {
+        return editionHref;
+    }
+
+    const edition = Reflect.get(team, "edition");
+    return typeof edition === "string" && edition.length > 0 ? edition : null;
+}
+
+function getAwardLabel(award: Award, fallbackIndex: number): string {
+    return award.name ?? award.title ?? award.category ?? `Award ${fallbackIndex + 1}`;
+}
+
+function getAwardWinnerTeamUri(award: Award): string | null {
+    const winnerTeamFromLink = award.link("winnerTeam")?.href;
+    if (winnerTeamFromLink) {
+        return winnerTeamFromLink;
+    }
+
+    if (typeof award.winnerTeam === "string" && award.winnerTeam.length > 0) {
+        return award.winnerTeam;
+    }
+
+    const winnerFromLink = award.link("winner")?.href;
+    if (winnerFromLink) {
+        return winnerFromLink;
+    }
+
+    const winner = Reflect.get(award, "winner");
+    if (typeof winner === "string" && winner.length > 0) {
+        return winner;
+    }
+
+    return null;
+}
+
+function normalizeUri(resourceUri: string | null | undefined): string | null {
+    if (!resourceUri) {
+        return null;
+    }
+
+    const sanitizedUri = resourceUri.split(/[?#]/, 1)[0] ?? null;
+    if (!sanitizedUri) {
+        return null;
+    }
+
+    return sanitizedUri.replace(/^https?:\/\/[^/]+/i, "");
+}
+
 export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps>) {
     const { id } = await props.params;
 
     const service = new TeamsService(serverAuthProvider);
     const scientificProjectsService = new ScientificProjectsService(serverAuthProvider);
     const userService = new UsersService(serverAuthProvider);
+    const awardsService = new AwardsService(serverAuthProvider);
+    const editionsService = new EditionsService(serverAuthProvider);
 
     let currentUser: User | null = null;
     let team: Team | null = null;
     let coaches: TeamCoach[] = [];
     let members: TeamMember[] = [];
     let scientificProjects: ScientificProject[] = [];
+    let awards: Award[] = [];
+    let editionOptions: AwardOption[] = [];
+    let teamEditionUri: string | null = null;
 
     let error: string | null = null;
     let membersError: string | null = null;
     let scientificProjectsError: string | null = null;
+    let awardsError: string | null = null;
+    let editionsError: string | null = null;
 
     try {
         currentUser = await userService.getCurrentUser().catch(() => null);
@@ -60,9 +126,16 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
         error = parseErrorMessage(e);
     }
 
+    const isAdminUser = !!currentUser?.authorities?.some(
+        (authority) => authority.authority === "ROLE_ADMIN"
+    );
+
     const teamDisplayName = getTeamDisplayName(team);
 
     if (team && !error) {
+        const teamUri = getTeamUri(team);
+        teamEditionUri = getTeamEditionUri(team);
+
         const [membersResult, scientificProjectsResult] = await Promise.allSettled([
             Promise.all([
                 service.getTeamCoach(id),
@@ -88,14 +161,33 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
             console.error("Error loading scientific projects:", scientificProjectsResult.reason);
             scientificProjectsError = parseErrorMessage(scientificProjectsResult.reason);
         }
+
+        if (teamEditionUri && teamUri) {
+            try {
+                const editionAwards = await awardsService.getAwardsOfEdition(teamEditionUri);
+                awards = editionAwards.filter((award) => normalizeUri(getAwardWinnerTeamUri(award)) === normalizeUri(teamUri));
+            } catch (e) {
+                console.error("Error loading awards:", e);
+                awardsError = parseErrorMessage(e);
+            }
+        }
+
+        if (currentUser && isAdminUser) {
+            try {
+                const editions = await editionsService.getEditions();
+                editionOptions = editions.map((edition) => ({
+                    label: `${edition.year ?? "Edition"}${edition.venueName ? ` - ${edition.venueName}` : ""}`,
+                    value: edition.link("self")?.href ?? edition.uri ?? "",
+                })).filter(option => option.value.length > 0);
+            } catch (e) {
+                console.error("Error loading editions:", e);
+                editionsError = parseErrorMessage(e);
+            }
+        }
     }
 
     if (error) return <ErrorAlert message={error} />;
     if (!team) return <EmptyState title="Not found" description="Team does not exist" />;
-
-    const isAdmin = !!currentUser?.authorities?.some(
-        (authority) => authority.authority === "ROLE_ADMIN"
-    );
 
     const currentUserEmail = currentUser?.email?.trim().toLowerCase();
 
@@ -136,7 +228,7 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                         <p><strong>Coach:</strong> {coachName}</p>
                     </div>
 
-                    {isAdmin && (
+                    {isAdminUser && (
                         <div className="mb-6 rounded-md border border-border p-4">
                             <TeamEditSection
                                 team={{
@@ -152,6 +244,65 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                         </div>
                     )}
 
+                    <section aria-labelledby="team-awards-heading">
+                        <h2 id="team-awards-heading" className="mt-8 mb-4 text-xl font-semibold">
+                            Awards
+                        </h2>
+
+                        {currentUser && isAdminUser && teamEditionUri && !editionsError && (
+                            <div className="mb-4">
+                                <AddAwardForm
+                                    teamId={id}
+                                    teamName={teamDisplayName ?? team.id ?? "Team"}
+                                    editionOptions={editionOptions.length > 0 ? editionOptions : [
+                                        {
+                                            label: "Current edition",
+                                            value: teamEditionUri,
+                                        },
+                                    ]}
+                                    defaultEdition={teamEditionUri}
+                                />
+                            </div>
+                        )}
+
+                        {currentUser && isAdminUser && !teamEditionUri && (
+                            <ErrorAlert message="This team is not linked to an edition, so awards cannot be created yet." />
+                        )}
+
+                        {editionsError && currentUser && isAdminUser && (
+                            <ErrorAlert message={`Could not load editions for the award form. ${editionsError}`} />
+                        )}
+
+                        {awardsError && (
+                            <ErrorAlert message={`Could not load awards. ${awardsError}`} />
+                        )}
+
+                        {!awardsError && awards.length === 0 && (
+                            <EmptyState
+                                title="No awards yet"
+                                description="This team has not received any awards yet."
+                                className="py-8"
+                            />
+                        )}
+
+                        {!awardsError && awards.length > 0 && (
+                            <ul className="space-y-3">
+                                {awards.map((award, index) => (
+                                    <li
+                                        key={award.uri ?? award.link("self")?.href ?? index}
+                                        className="rounded-lg border border-border bg-card p-4 shadow-sm"
+                                    >
+                                        <p className="font-medium text-foreground">{getAwardLabel(award, index)}</p>
+                                        <div className="mt-1 text-sm text-muted-foreground">
+                                            {award.title && <p>{award.title}</p>}
+                                            {award.category && <p>{award.category}</p>}
+                                        </div>
+                                    </li>
+                                ))}
+                            </ul>
+                        )}
+                    </section>
+
                     <h2 className="mt-8 mb-4 text-xl font-semibold">
                         Team Members
                     </h2>
@@ -162,7 +313,7 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                             teamId={id}
                             initialMembers={initialMembers}
                             isCoach={isCoach}
-                            isAdmin={isAdmin}
+                            isAdmin={isAdminUser}
                         />
                     )}
 
