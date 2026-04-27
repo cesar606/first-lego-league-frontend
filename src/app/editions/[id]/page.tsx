@@ -21,6 +21,7 @@ import { User } from "@/types/user";
 import { parseErrorMessage, NotFoundError } from "@/types/errors";
 import Link from "next/link";
 import { getTeamDisplayName } from "@/lib/teamUtils";
+import AwardSection from "./_award-section";
 import AddMediaForm from "./_add-media-form";
 
 interface EditionDetailPageProps {
@@ -38,10 +39,6 @@ function getEditionTitle(edition: Edition | null, id: string) {
     }
 
     return `Edition ${id}`;
-}
-
-function getAwardLabel(award: Award, fallbackIndex: number): string {
-    return award.name ?? award.title ?? award.category ?? `Award ${fallbackIndex + 1}`;
 }
 
 function getAwardWinnerTeamUri(award: Award): string | null {
@@ -148,6 +145,7 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
     let edition: Edition | null = null;
     let teams: Team[] = [];
     let awards: Award[] = [];
+    let editions: Edition[] = [];
     let mediaContents: MediaContent[] = [];
     let leaderboardItems: LeaderboardItem[] = [];
     let error: string | null = null;
@@ -181,6 +179,14 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
 
         if (edition.uri) {
             ({ awards, mediaContents, awardsError, mediaError } = await fetchByEditionUri(edition.uri, awardsService, mediaService));
+        }
+
+        if (currentUser && isAdmin(currentUser)) {
+            try {
+                editions = await editionsService.getEditions();
+            } catch (e) {
+                console.error("Failed to fetch editions:", e);
+            }
         }
 
         try {
@@ -245,15 +251,42 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
                                                 key={team.uri ?? index}
                                                 className="w-full rounded-lg border border-border bg-card p-4 shadow-sm transition hover:bg-secondary/30"
                                             >
-                                                {href ? (
-                                                    <Link href={href} className="font-medium text-foreground">
-                                                        {getTeamDisplayName(team)}
-                                                    </Link>
-                                                ) : (
-                                                    <span className="font-medium text-foreground">
-                                                        {getTeamDisplayName(team)}
-                                                    </span>
-                                                )}
+                                                <div className="flex flex-col gap-3">
+                                                    {href ? (
+                                                        <Link href={href} className="font-medium text-foreground">
+                                                            {getTeamDisplayName(team)}
+                                                        </Link>
+                                                    ) : (
+                                                        <span className="font-medium text-foreground">
+                                                            {getTeamDisplayName(team)}
+                                                        </span>
+                                                    )}
+
+                                                    {teamAwards.length > 0 && (
+                                                        <div className="space-y-3 rounded-md border border-border bg-background/70 p-3">
+                                                            <div className="flex items-center justify-between gap-3">
+                                                                <h3 className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                                                                    Awards
+                                                                </h3>
+                                                                <span className="text-xs text-muted-foreground">
+                                                                    {teamAwards.length}
+                                                                </span>
+                                                            </div>
+
+                                                            <div className="space-y-3">
+                                                                {teamAwards.map((award) => (
+                                                                    <AwardSection
+                                                                        key={award.uri ?? award.link("self")?.href ?? `${team.uri ?? index}-${award.name ?? award.title ?? award.category ?? "award"}`}
+                                                                        award={award}
+                                                                        editionId={id}
+                                                                        editions={editions}
+                                                                        isAdmin={Boolean(currentUser && isAdmin(currentUser))}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                             </li>
                                         );
                                     })}

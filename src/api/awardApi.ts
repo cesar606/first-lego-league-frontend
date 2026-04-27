@@ -1,10 +1,17 @@
 import type { AuthStrategy } from "@/lib/authProvider";
 import { Award } from "@/types/award";
 import { Team } from "@/types/team";
-import { fetchHalCollection, fetchHalResource } from "./halClient";
+import { fetchHalCollection, fetchHalResource, updateHalResource } from "./halClient";
 
 function getResourceUri(resource: Team & { link: (relation: string) => { href?: string } | undefined }): string | null {
     return resource.uri ?? resource.link("self")?.href ?? null;
+}
+
+export interface UpdateAwardPayload {
+    name: string;
+    title?: string;
+    category?: string;
+    edition: string;
 }
 
 export class AwardsService {
@@ -35,5 +42,19 @@ export class AwardsService {
                 winnerTeam: winnerTeamUri,
             });
         }));
+    }
+
+    async updateAward(resourceUri: string, data: UpdateAwardPayload): Promise<Award> {
+        return updateHalResource<Award>(
+            resourceUri,
+            {
+                name: data.name.trim(),
+                title: data.title?.trim() || undefined,
+                category: data.category?.trim() || undefined,
+                edition: data.edition,
+            },
+            this.authStrategy,
+            "award"
+        );
     }
 }
