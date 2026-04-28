@@ -1,11 +1,9 @@
 'use server';
 
 import { AwardsService } from "@/api/awardApi";
-import { EditionsService } from "@/api/editionApi";
 import { TeamsService } from "@/api/teamApi";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { isAdmin } from "@/lib/authz";
-import { getEncodedResourceId } from "@/lib/halRoute";
 import { AuthenticationError, NotFoundError } from "@/types/errors";
 import { Team } from "@/types/team";
 import { UsersService } from "@/api/userApi";
@@ -18,15 +16,10 @@ type CreateAwardFormPayload = {
     name: string;
     title: string;
     category: string;
-    edition: string;
 };
 
 function getResourceHref(resource: Team): string | null {
     return resource.link("self")?.href ?? resource.uri ?? null;
-}
-
-function getTeamEditionHref(team: Team): string | null {
-    return team.link("edition")?.href ?? (typeof Reflect.get(team, "edition") === "string" ? Reflect.get(team, "edition") : null);
 }
 
 export async function createAwardForTeam(
@@ -37,9 +30,8 @@ export async function createAwardForTeam(
         const name = payload.name.trim();
         const title = payload.title.trim();
         const category = payload.category.trim();
-        const edition = payload.edition.trim();
 
-        if (!name || !title || !category || !edition) {
+        if (!name || !title || !category) {
             throw new Error("All award fields are required.");
         }
 
@@ -49,15 +41,12 @@ export async function createAwardForTeam(
         }
 
         const teamsService = new TeamsService(serverAuthProvider);
-        const editionsService = new EditionsService(serverAuthProvider);
         const awardsService = new AwardsService(serverAuthProvider);
 
         const team = await teamsService.getTeamById(teamId);
-        const selectedEdition = await editionsService.getEditionByUri(edition);
 
         const teamHref = getResourceHref(team);
-        const teamEditionHref = getTeamEditionHref(team);
-        const selectedEditionHref = selectedEdition.link("self")?.href ?? selectedEdition.uri ?? edition;
+        const teamEditionHref = team.link("edition")?.href ?? (typeof Reflect.get(team, "edition") === "string" ? Reflect.get(team, "edition") : null);
 
         if (!teamHref) {
             throw new NotFoundError("The team could not be resolved.");
@@ -67,18 +56,11 @@ export async function createAwardForTeam(
             throw new Error("This team is not linked to an edition.");
         }
 
-        const teamEditionId = getEncodedResourceId(teamEditionHref);
-        const selectedEditionId = getEncodedResourceId(selectedEditionHref);
-
-        if (!teamEditionId || !selectedEditionId || teamEditionId !== selectedEditionId) {
-            throw new Error("The selected edition does not match this team's edition.");
-        }
-
         await awardsService.createAward({
             name,
             title,
             category,
-            edition: selectedEditionHref,
+            edition: teamEditionHref,
             winner: teamHref,
         });
 

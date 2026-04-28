@@ -3,7 +3,6 @@ import ErrorAlert from "@/app/components/error-alert";
 import { getAwardLabel } from "@/lib/awardUtils";
 import { Award } from "@/types/award";
 import AddAwardForm from "./_add-award-form";
-import type { AwardOption } from "./_add-award-form";
 
 interface TeamAwardsSectionProps {
     teamId: string;
@@ -12,8 +11,6 @@ interface TeamAwardsSectionProps {
     awardsError: string | null;
     isAdminUser: boolean;
     teamEditionUri: string | null;
-    editionOptions: AwardOption[];
-    editionsError: string | null;
 }
 
 export default function TeamAwardsSection({
@@ -23,8 +20,6 @@ export default function TeamAwardsSection({
     awardsError,
     isAdminUser,
     teamEditionUri,
-    editionOptions,
-    editionsError,
 }: Readonly<TeamAwardsSectionProps>) {
     return (
         <section aria-labelledby="team-awards-heading">
@@ -32,28 +27,17 @@ export default function TeamAwardsSection({
                 Awards
             </h2>
 
-            {isAdminUser && teamEditionUri && !editionsError && (
+            {isAdminUser && teamEditionUri && (
                 <div className="mb-4">
                     <AddAwardForm
                         teamId={teamId}
                         teamName={teamName}
-                        editionOptions={editionOptions.length > 0 ? editionOptions : [
-                            {
-                                label: "Current edition",
-                                value: teamEditionUri,
-                            },
-                        ]}
-                        defaultEdition={teamEditionUri}
                     />
                 </div>
             )}
 
             {isAdminUser && !teamEditionUri && (
                 <ErrorAlert message="This team is not linked to an edition, so awards cannot be created yet." />
-            )}
-
-            {editionsError && isAdminUser && (
-                <ErrorAlert message={`Could not load editions for the award form. ${editionsError}`} />
             )}
 
             {awardsError && (

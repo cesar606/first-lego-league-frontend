@@ -1,5 +1,4 @@
 import { AwardsService } from "@/api/awardApi";
-import { EditionsService } from "@/api/editionApi";
 import { ScientificProjectsService } from "@/api/scientificProjectApi";
 import { TeamsService } from "@/api/teamApi";
 import { UsersService } from "@/api/userApi";
@@ -10,7 +9,6 @@ import { TeamMembersManager } from "@/app/components/team-member-manager";
 import TeamEditSection from "@/app/components/team-edit-section";
 import { serverAuthProvider } from "@/lib/authProvider";
 import { getAwardWinnerTeamUri, normalizeUri } from "@/lib/awardUtils";
-import { getEditionOptionLabel } from "@/lib/editionUtils";
 import { NotFoundError, parseErrorMessage } from "@/types/errors";
 import { Award } from "@/types/award";
 import { ScientificProject } from "@/types/scientificProject";
@@ -60,7 +58,6 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
     const scientificProjectsService = new ScientificProjectsService(serverAuthProvider);
     const userService = new UsersService(serverAuthProvider);
     const awardsService = new AwardsService(serverAuthProvider);
-    const editionsService = new EditionsService(serverAuthProvider);
 
     let currentUser: User | null = null;
     let team: Team | null = null;
@@ -68,14 +65,12 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
     let members: TeamMember[] = [];
     let scientificProjects: ScientificProject[] = [];
     let awards: Award[] = [];
-    let editionOptions: { label: string; value: string }[] = [];
     let teamEditionUri: string | null = null;
 
     let error: string | null = null;
     let membersError: string | null = null;
     let scientificProjectsError: string | null = null;
     let awardsError: string | null = null;
-    let editionsError: string | null = null;
 
     try {
         currentUser = await userService.getCurrentUser().catch(() => null);
@@ -133,18 +128,6 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
             }
         }
 
-        if (currentUser && isAdminUser) {
-            try {
-                const editions = await editionsService.getEditions();
-                editionOptions = editions.map((edition) => ({
-                    label: getEditionOptionLabel(edition),
-                    value: edition.link("self")?.href ?? edition.uri ?? "",
-                })).filter(option => option.value.length > 0);
-            } catch (e) {
-                console.error("Error loading editions:", e);
-                editionsError = parseErrorMessage(e);
-            }
-        }
     }
 
     if (error) return <ErrorAlert message={error} />;
@@ -212,8 +195,6 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                         awardsError={awardsError}
                         isAdminUser={isAdminUser}
                         teamEditionUri={teamEditionUri}
-                        editionOptions={editionOptions}
-                        editionsError={editionsError}
                     />
 
                     <h2 className="mt-8 mb-4 text-xl font-semibold">

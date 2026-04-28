@@ -9,30 +9,20 @@ import { startTransition, useEffect, useState } from "react";
 import { SubmitHandler, useForm } from "react-hook-form";
 import { createAwardForTeam } from "./_add-award-actions";
 
-export type AwardOption = {
-    label: string;
-    value: string;
-};
-
 type AddAwardFormValues = {
     name: string;
     title: string;
     category: string;
-    edition: string;
 };
 
 interface AddAwardFormProps {
     teamId: string;
     teamName: string;
-    editionOptions: AwardOption[];
-    defaultEdition?: string;
 }
 
 export default function AddAwardForm({
     teamId,
     teamName,
-    editionOptions,
-    defaultEdition = "",
 }: Readonly<AddAwardFormProps>) {
     const router = useRouter();
     const [submitError, setSubmitError] = useState<string | null>(null);
@@ -42,7 +32,6 @@ export default function AddAwardForm({
             name: "",
             title: "",
             category: "",
-            edition: defaultEdition,
         },
     });
 
@@ -51,9 +40,8 @@ export default function AddAwardForm({
             name: "",
             title: "",
             category: "",
-            edition: defaultEdition,
         });
-    }, [defaultEdition, reset]);
+    }, [reset]);
 
     const onSubmit: SubmitHandler<AddAwardFormValues> = async (data) => {
         setSubmitError(null);
@@ -63,7 +51,6 @@ export default function AddAwardForm({
             name: data.name.trim(),
             title: data.title.trim(),
             category: data.category.trim(),
-            edition: data.edition,
         });
 
         if (!result.success) {
@@ -76,7 +63,6 @@ export default function AddAwardForm({
             name: "",
             title: "",
             category: "",
-            edition: defaultEdition,
         });
         startTransition(() => {
             router.refresh();
@@ -88,7 +74,7 @@ export default function AddAwardForm({
             <div className="mb-4">
                 <h3 className="text-base font-semibold text-foreground">Add Award</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                    Create a new award for this team and link it to the correct edition.
+                    Create a new award for this team. The edition is inferred automatically from the team.
                 </p>
             </div>
 
@@ -140,25 +126,6 @@ export default function AddAwardForm({
                         })}
                     />
                     {errors.category && <p id="award-category-error" className="text-sm text-destructive">{errors.category.message}</p>}
-                </div>
-
-                <div className="grid gap-2 sm:col-span-2">
-                    <Label htmlFor="award-edition">Edition</Label>
-                    <select
-                        id="award-edition"
-                        className="border-input h-11 w-full border bg-card px-4 py-2 text-base outline-none focus-visible:border-ring focus-visible:ring-ring/35 focus-visible:ring-[3px] aria-invalid:border-destructive md:text-sm"
-                        aria-invalid={!!errors.edition}
-                        aria-describedby={errors.edition ? "award-edition-error" : undefined}
-                        {...register("edition", { required: "Edition is required" })}
-                    >
-                        <option value="">Select an edition...</option>
-                        {editionOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                                {option.label}
-                            </option>
-                        ))}
-                    </select>
-                    {errors.edition && <p id="award-edition-error" className="text-sm text-destructive">{errors.edition.message}</p>}
                 </div>
             </div>
 
