@@ -4,33 +4,41 @@ import { Button } from "@/app/components/button";
 import ErrorAlert from "@/app/components/error-alert";
 import { Input } from "@/app/components/input";
 import { Label } from "@/app/components/label";
-import { Award } from "@/types/award";
-import { Edition } from "@/types/edition";
 import { useRouter } from "next/navigation";
 import { type FormEvent, useEffect, useId, useRef, useState } from "react";
 import { updateAward } from "./_award-actions";
 
 interface AwardSectionProps {
-    readonly award: Award;
+    readonly award: {
+        readonly resourceUri: string;
+        readonly name?: string;
+        readonly title?: string;
+        readonly category?: string;
+        readonly edition?: string;
+    };
     readonly editionId: string;
-    readonly editions: Edition[];
+    readonly editions: Array<{
+        readonly uri?: string;
+        readonly year?: number;
+        readonly venueName?: string;
+    }>;
     readonly isAdmin: boolean;
 }
 
-function getAwardLabel(award: Award): string {
+function getAwardLabel(award: AwardSectionProps["award"]): string {
     return award.name?.trim() || award.title?.trim() || award.category?.trim() || "Unnamed award";
 }
 
-function getEditionLabel(edition: Edition): string {
+function getEditionLabel(edition: AwardSectionProps["editions"][number]): string {
     const year = edition.year ? String(edition.year) : "Edition";
     return edition.venueName ? `${year} - ${edition.venueName}` : year;
 }
 
-function getEditionValue(edition: Edition): string {
-    return edition.uri ?? edition.link("self")?.href ?? "";
+function getEditionValue(edition: AwardSectionProps["editions"][number]): string {
+    return edition.uri ?? "";
 }
 
-function getAwardEditionLabel(award: Award, editions: Edition[]): string {
+function getAwardEditionLabel(award: AwardSectionProps["award"], editions: AwardSectionProps["editions"]): string {
     const editionValue = award.edition?.trim();
 
     if (!editionValue) {
@@ -50,7 +58,7 @@ export default function AwardSection({
     const router = useRouter();
     const dialogRef = useRef<HTMLDialogElement>(null);
     const titleId = useId();
-    const resourceUri = award.uri ?? award.link("self")?.href ?? "";
+    const resourceUri = award.resourceUri;
 
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);

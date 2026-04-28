@@ -28,6 +28,21 @@ interface EditionDetailPageProps {
     readonly params: Promise<{ id: string }>;
 }
 
+interface AwardCard {
+    readonly resourceUri: string;
+    readonly name?: string;
+    readonly title?: string;
+    readonly category?: string;
+    readonly edition?: string;
+    readonly winnerTeam?: string;
+}
+
+interface EditionOption {
+    readonly uri?: string;
+    readonly year?: number;
+    readonly venueName?: string;
+}
+
 function getTeamHref(team: Team): string | null {
     const teamId = getEncodedResourceId(team.uri);
     return teamId ? `/teams/${teamId}` : null;
@@ -39,29 +54,6 @@ function getEditionTitle(edition: Edition | null, id: string) {
     }
 
     return `Edition ${id}`;
-}
-
-function getAwardWinnerTeamUri(award: Award): string | null {
-    const winnerTeamFromLink = award.link("winnerTeam")?.href;
-    if (winnerTeamFromLink) {
-        return winnerTeamFromLink;
-    }
-
-    if (typeof award.winnerTeam === "string" && award.winnerTeam.length > 0) {
-        return award.winnerTeam;
-    }
-
-    const winnerFromLink = award.link("winner")?.href;
-    if (winnerFromLink) {
-        return winnerFromLink;
-    }
-
-    const winner = Reflect.get(award, "winner");
-    if (typeof winner === "string" && winner.length > 0) {
-        return winner;
-    }
-
-    return null;
 }
 
 function normalizeUri(resourceUri: string | null | undefined): string | null {
@@ -79,7 +71,7 @@ function normalizeUri(resourceUri: string | null | undefined): string | null {
 }
 
 interface EditionUriData {
-    awards: Award[];
+    awards: Award[]; 
     mediaContents: MediaContent[];
     awardsError: string | null;
     mediaError: string | null;
@@ -118,11 +110,22 @@ function toMediaItem(content: MediaContent): MediaItem {
     };
 }
 
-function getAwardsByTeamUri(awards: Award[]): Map<string, Award[]> {
-    const awardsByTeamUri = new Map<string, Award[]>();
+function toAwardCard(award: Award): AwardCard {
+    return {
+        resourceUri: award.uri ?? award.link("self")?.href ?? "",
+        name: award.name,
+        title: award.title,
+        category: award.category,
+        edition: award.edition,
+        winnerTeam: award.winnerTeam ?? award.link("winnerTeam")?.href ?? award.link("winner")?.href,
+    };
+}
+
+function getAwardsByTeamUri(awards: AwardCard[]): Map<string, AwardCard[]> {
+    const awardsByTeamUri = new Map<string, AwardCard[]>();
 
     for (const award of awards) {
-        const teamUri = normalizeUri(getAwardWinnerTeamUri(award));
+        const teamUri = normalizeUri(award.winnerTeam);
         if (!teamUri) {
             continue;
         }
@@ -145,7 +148,7 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
     let edition: Edition | null = null;
     let teams: Team[] = [];
     let awards: Award[] = [];
-    let editions: Edition[] = [];
+    let editions: EditionOption[] = [];
     let mediaContents: MediaContent[] = [];
     let leaderboardItems: LeaderboardItem[] = [];
     let error: string | null = null;
@@ -183,7 +186,11 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
 
         if (currentUser && isAdmin(currentUser)) {
             try {
-                editions = await editionsService.getEditions();
+                editions = (await editionsService.getEditions()).map((item) => ({
+                    uri: item.uri,
+                    year: item.year,
+                    venueName: item.venueName,
+                }));
             } catch (e) {
                 console.error("Failed to fetch editions:", e);
             }
@@ -198,7 +205,8 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
         }
     }
 
-    const awardsByTeamUri = getAwardsByTeamUri(awards);
+    const awardCards = awards.map(toAwardCard);
+    const awardsByTeamUri = getAwardsByTeamUri(awardCards);
 
     return (
         <div className="flex min-h-screen items-center justify-center bg-background">
@@ -276,7 +284,7 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
                                                             <div className="space-y-3">
                                                                 {teamAwards.map((award) => (
                                                                     <AwardSection
-                                                                        key={award.uri ?? award.link("self")?.href ?? `${team.uri ?? index}-${award.name ?? award.title ?? award.category ?? "award"}`}
+                                                                        key={award.resourceUri || `${team.uri ?? index}-${award.name ?? award.title ?? award.category ?? "award"}`}
                                                                         award={award}
                                                                         editionId={id}
                                                                         editions={editions}
