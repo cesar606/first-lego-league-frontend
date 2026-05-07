@@ -4,6 +4,7 @@ import { LeaderboardService } from "@/api/leaderboardApi";
 import { MediaService } from "@/api/mediaApi";
 import { UsersService } from "@/api/userApi";
 import { buttonVariants } from "@/app/components/button";
+import FavoriteActionButton from "@/app/components/favorite-action-button";
 import EmptyState from "@/app/components/empty-state";
 import ErrorAlert from "@/app/components/error-alert";
 import { Breadcrumb } from "@/app/components/breadcrumb";
@@ -246,8 +247,26 @@ export default async function EditionDetailPage(props: Readonly<EditionDetailPag
                             )}
                         </div>
 
+                        <FavoriteActionButton
+                            item={{
+                                kind: "edition",
+                                href: `/editions/${id}`,
+                                label: getEditionTitle(edition, id),
+                                subtitle: "Edition",
+                            }}
+                        />
+
                         {currentUser && isAdmin(currentUser) && (
                             <div className="flex gap-2">
+                                <FavoriteActionButton
+                                    className="hidden"
+                                    item={{
+                                        kind: "edition",
+                                        href: `/editions/${id}`,
+                                        label: getEditionTitle(edition, id),
+                                        subtitle: "Edition",
+                                    }}
+                                />
                                 <Link
                                     href={`/editions/${id}/edit`}
                                     className={buttonVariants({ variant: "default", size: "sm" })}

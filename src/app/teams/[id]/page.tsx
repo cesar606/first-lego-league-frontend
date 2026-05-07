@@ -5,6 +5,7 @@ import { ScientificProjectsService } from "@/api/scientificProjectApi";
 import { TeamsService } from "@/api/teamApi";
 import { UsersService } from "@/api/userApi";
 import { Breadcrumb } from "@/app/components/breadcrumb";
+import FavoriteActionButton from "@/app/components/favorite-action-button";
 import EmptyState from "@/app/components/empty-state";
 import ErrorAlert from "@/app/components/error-alert";
 import TeamEditSection from "@/app/components/team-edit-section";
@@ -318,7 +319,17 @@ export default async function TeamDetailPage(props: Readonly<TeamDetailPageProps
                         <h1 className="text-2xl font-semibold text-foreground">
                             {teamDisplayName ?? "Unnamed team"}
                         </h1>
-                        <TeamShareButton teamName={teamDisplayName ?? "Unnamed team"} />
+                        <div className="flex flex-wrap items-center gap-2">
+                            <FavoriteActionButton
+                                item={{
+                                    kind: "team",
+                                    href: `/teams/${id}`,
+                                    label: teamDisplayName ?? "Unnamed team",
+                                    subtitle: "Team",
+                                }}
+                            />
+                            <TeamShareButton teamName={teamDisplayName ?? "Unnamed team"} />
+                        </div>
                     </div>
 
                     <div className="mb-6 space-y-1 text-sm text-muted-foreground">

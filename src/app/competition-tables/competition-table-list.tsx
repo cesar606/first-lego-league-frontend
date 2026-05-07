@@ -8,6 +8,7 @@ import EmptyState from "@/app/components/empty-state";
 import { CompetitionTableService } from "@/api/competitionTableApi";
 import { clientAuthProvider } from "@/lib/authProvider";
 import { parseErrorMessage } from "@/types/errors";
+import Link from "next/link";
 import CreateCompetitionTableDialog from "./create-competition-table-dialog";
 import AssignRefereeDialog, { RefereeOption } from "./assign-referee-dialog";
 
@@ -83,7 +84,11 @@ export default function CompetitionTableList({ tables, refereesByTable, allRefer
                                 const referees = refereesByTable[tableId] ?? [];
                                 return (
                                     <tr key={tableId} className="bg-card hover:bg-muted/30 transition-colors">
-                                        <td className="px-4 py-3 font-medium">{tableId}</td>
+                                        <td className="px-4 py-3 font-medium">
+                                            <Link href={`/competition-tables/${encodeURIComponent(tableId)}`} className="text-foreground hover:underline">
+                                                {tableId}
+                                            </Link>
+                                        </td>
                                         <td className="px-4 py-3 text-muted-foreground">
                                             {referees.length === 0 ? (
                                                 <span className="text-xs italic">No referees assigned</span>

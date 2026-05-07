@@ -2,6 +2,7 @@
 
 import { useAuth } from "@/app/components/authentication";
 import EditionSelector from "@/app/components/edition-selector";
+import FavoritesDropdown from "@/app/components/favorites-dropdown";
 import Loginbar from "@/app/components/loginbar";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
@@ -121,6 +122,8 @@ export default function Navbar() {
                                 </>
                             )}
                         </div>
+
+                        <FavoritesDropdown />
                     </div>
 
                     {/* Right Side Actions */}
@@ -153,6 +156,7 @@ export default function Navbar() {
             {/* Mobile Menu Content */}
             {isMenuOpen && (
                 <div className="lg:hidden border-t border-border bg-card p-4 space-y-2 animate-in slide-in-from-top-2">
+                    <FavoritesDropdown mobile />
                     {[...mainNavLinks, ...moduleLinks]
                         .filter(l => !l.roles || user?.authorities?.some(a => l.roles?.includes(a.authority)))
                         .map(link => (
